@@ -28,7 +28,7 @@ Introducing a retro-futuristic terminal interface that simulates a 1979 Teletype
 - LLM integration (multi-model via Ollama API)
 - Models supported: `qwen2.5:0.5b`, `tinydolphin`, `granite3-moe`
 - System prompt identifies the LLM as a Teletype Model 33 ASR (1979)
-- Lightweight models run locally with fast, lightweight footprint`
+- Lightweight models run locally with fast, lightweight footprint
 - Proper header/footer hex codes (#FF, #00)
 - Tape Jam is simulated if input text or LLM response is too large
 
@@ -41,30 +41,43 @@ Introducing a retro-futuristic terminal interface that simulates a 1979 Teletype
 
 ## Setup
 
+I setup my server on Amazon AWS Linux. Adjust accordingly for your environment.
+
 #### Clone the repo
 
-Blah
+To get started, clone the project from GitHub:
 
 ```
-pip install flask matplotlib requests
+git clone https://github.com/m15-ai/Paper-Tape-LLM.git
+cd Paper-Tape-LLM
 ```
-
-Blah
 
 #### Install dependencies:
 
 ```
-pip install flask matplotlib requestsRun Ollama locally
+pip install flask matplotlib
 ```
 
-Install [Ollama](https://ollama.com) and pull one or more models:
+#### Run Ollama locally
+
+Install `Ollama` for your platform, then pull one or more supported models:
+
 ```bash
 ollama pull qwen2.5:0.5b
 ollama pull tinydolphin
 ollama pull granite3-moe:1b
 ```
 
-Blah
+Make sure the Ollama daemon is running in the background. Use `Ollama list` to confirm your models are available:
+
+```
+[ec2-user@ip-xxx html]$ ollama serve
+[ec2-user@ip-xxx html]$ ollama list
+NAME                   ID              SIZE      MODIFIED     
+granite3-moe:1b        d84e1e38ee39    821 MB    25 hours ago    
+tinydolphin:latest     0f9dd11f824c    636 MB    25 hours ago    
+qwen2.5:0.5b           a8b0c5157701    397 MB    25 hours ago
+```
 
 
 #### Start the Flask server
@@ -88,7 +101,7 @@ Run the server so it will persist:
 nohup python3 papertape_server.py > server.log 2>&1 &
 ```
 
-Blah
+This will expose the `/generate_paper_tape` endpoint.
 
 #### Install the Front-end assets
 
@@ -112,25 +125,58 @@ total 63
  20 -rw-rw-r--. 1 ec2-user ec2-user  17540 Apr 17 18:19 papertape.html
 ```
 
-Blah
-
 #### Serve the HTML page
 
-Run the server so it will persist:
+After launching the Flask backend, open `papertape.html` directly in your browser (e.g., from your `/var/www/html` or localhost folder). The HTML will communicate with the backend to generate paper tape completions.
+
+#### HTML Overview (`papertape.html`)
+
+This file contains the fully retro-styled frontend interface:
+
+- **Power Switch**: A clickable image button (`button-on.png`, `button-off.png`) that powers the teletype on/off. Triggers startup and shutdown audio, screen shake, and LED activation.
+- **Text Input & Submit Button**: A styled text input box and a green send icon (`send_48dp_green.png`) that submits prompts to the server.
+- **LLM Selector**: A dropdown menu lets users select which local Ollama model to use. Locked while power is on.
+- **LED Panel**: Simulated KSR, ASR, LLM, and JAM status lights that activate based on interaction state.
+- **BELL Toggle**: Checkbox enabling the inclusion of ASCII `BEL` (U+0007) in the final tape and triggering a physical bell sound (`ding.mp3`).
+- **Paper Tape Scroll**: Receives a PNG tape image from the server and scrolls it across the screen in "chunky" increments, synchronized with retro click sounds (`ttclick4.mp3`).
+- **Audio Feedback**: Three hum sounds (`tt-starting.mp3`, `tt-running.mp3`, `tt-stopping.mp3`) create a realistic audio profile for machine state.
+- **Tape JAM Handling**: Detects long input or LLM output, shows a JAM LED, and aborts the scroll sequence.
+
+#### Python Backend Overview (`papertape_server.py`)
+
+This Flask server powers the paper tape simulation and LLM interaction:
+
+- **Endpoint `/generate_paper_tape`**: Accepts a POST JSON payload containing:
+  - `text`: the user prompt
+  - `bell`: boolean indicating if the `BEL` character should be added
+  - `model`: the selected LLM model (e.g. `qwen2.5:0.5b`)
+- **LLM Request Handling**:
+  - Sends the prompt to the Ollama server using the selected model
+  - Prepends a system message simulating a 1979 Teletype terminal
+- **Tape Rendering**:
+  - Converts the LLM completion string to 8-bit ASCII punch codes
+  - Adds leader (`0xFF`) and trailer (`0x00`) bytes
+  - Optionally appends `BEL` as a visible glyph
+  - Uses `matplotlib` to render a PNG of the full tape
+- **Returns**:
+  - The PNG image via `send_file()`
+  - A custom HTTP header (`X-Punch-Count`) with the total character count for frontend animation sync
+
+#### Customizing the System Prompt
+
+The system message sent to each model tells it to behave like a 1979 Teletype terminal. You can modify this string in `papertape_server.py` to adjust tone, length, or formatting of LLM responses.
 
 ```
-nohup python3 papertape_server.py > server.log 2>&1 &
+@app.route('/generate_paper_tape', methods=['POST'])
+def generate_tape():
+    system_prompt = (
+        "You are a Teletype Model 33 ASR from the year 1979, connected to a mainframe via serial cable. "
+        "You respond in short bursts of uppercase text as if printed on a paper tape. "
+        "Your language is efficient, mechanical, and dry. Limit output to a few words per line, "
+        "like a real teletype outputting ASCII on paper tape. "
+        "Avoid punctuation unless absolutely necessary. Never apologize or explain. "
+    )
 ```
-
-Blah
-
-Use any web server (e.g., Apache, Nginx, or Python HTTP):
-
-```
-python3 -m http.server
-```
-
-Blah
 
 ## Notes
 
