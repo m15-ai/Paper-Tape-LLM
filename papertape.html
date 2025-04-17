@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Tape Generator - M15.ai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Anonymous Pro', monospace;
+            background-color: #0f0f0f;
+            color: #00aa00;
+            padding: 20px;
+            text-align: center;
+            margin: 0;
+        }
+        #inputText {
+            border: 1px solid #444;  /* default OFF border */
+            background-color: #111;
+            color: #eee;
+            padding: 8px;
+            border-radius: 6px;
+            outline: none;
+            transition: border 0.3s ease;
+        }
+        #inputText.power-on {
+            border-color: #0f0;  /* green when ON */
+        }
+        #paperTapeOutput {
+            margin-top: 30px;
+            display: flex; /* Use flexbox to center */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically if height is constrained */
+            min-height: 200px; /* Optional: Give it some space */
+        }
+        #tapeContainer {
+            max-height: 300px;
+            width: 900px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            #border: 1px solid #00ff00;
+            #border-radius: 8px;
+            padding: 4px;
+        }
+        #tapeImage {
+            height: 300px;
+            width: auto;
+            display: block;
+        }
+        .send-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            transition: transform 0.1s ease;
+        }
+        .send-button:hover {
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            transform: scale(1.25);
+        }
+        .send-button:active {
+            color: #e0f2f1;
+            transform: scale(0.95);
+        }
+        .send-button:disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+        @keyframes flicker {
+            0%, 100% { background-color: #0f0; box-shadow: 0 0 4px #0f0; }
+            50% { background-color: #060; box-shadow: 0 0 1px #060; }
+        }
+        .flicker {
+            animation: flicker 0.1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { background-color: #f00; box-shadow: 0 0 5px #f00; }
+            50% { background-color: #400; box-shadow: 0 0 1px #400; }
+        }
+        .blink {
+            animation: blink 0.2s infinite;
+        }
+        #powerButton {
+            transition: all 0.2s ease;
+            transform: scale(0.97); /* Default: slightly pressed in */
+            }
+        #powerButton.depressed {
+            transform: scale(1); /* Full size when ON */
+        }
+        #powerButton.glow {
+            filter: brightness(1.2);
+        }
+        #powerButton.glow::after {
+            content: "";
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,100,0.4) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        @keyframes screen-shake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(3px, -1px); }
+            60% { transform: translate(-1px, -2px); }
+            80% { transform: translate(2px, 1px); }
+        }
+        .shake {
+            animation: screen-shake 0.4s ease-in-out;
+        }
+        #bellToggle {
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border: 2px solid #555;
+            border-radius: 3px;
+            background-color: #111;
+            cursor: pointer;
+            vertical-align: middle;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        /* Checkmark style */
+        #bellToggle:checked {
+            background-color: #0f0;
+            box-shadow: 0 0 5px #0f0;
+        }
+        #bellToggle:hover {
+            border-color: #888;
+        }
+        @keyframes blink-fast {
+            0%, 100% { background-color: #222; }
+            50% { background-color: #c78aff; }
+        }
+        #llmLed.blink {
+            animation: blink-fast 0.15s linear infinite;
+        }
+        #modelSelect:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="screen">
+        <h1>
+            <img id="logo" src="m15-4.png" alt="M15.ai Logo" style="height: 80px; cursor: pointer;">
+        </h1>
+        <h2>Teletype Model 33 Paper Tape LLM</h2>
+
+        <h4><u>Instructions</u><br>Choose your LLM<br>Power on the machine<br>Type to the LLM<br>Power off to change models</h4>
+
+        <div style="text-align: center; margin-top: 50px;">
+            <label for="modelSelect" style="color: #0f0; font-family: monospace; font-size: 1.1em;">LLM Model:</label>
+            <select id="modelSelect" style="background-color: #111; color: #c78aff; border: 2px solid #444; padding: 4px 8px; border-radius: 6px; font-family: monospace;">
+              <option value="qwen2.5:0.5b" selected>qwen2.5:0.5b</option>
+              <option value="tinydolphin:latest">tinydolphin</option>
+              <option value="granite3-moe:1b">granite3-moe</option>
+            </select>
+          </div>
+        
+        <div style="text-align: center; margin-top: 20px; position: relative;">
+            <img id="powerButton" src="button-off.png" width="100" style="cursor: pointer;" alt="Power Button">
+        </div>
+
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px;">
+            <input type="text" id="inputText" placeholder="Enter text prompt ..." style="flex: 1; max-width: 600px; font-size: 1.3em;">
+            <button onclick="generatePaperTape()" class="send-button" disabled>    
+                <img src="send_48dp_green.png" alt="Send" style="height: 48px; width: 48px;">
+            </button>
+        </div>
+
+        <audio id="clickSound" src="ttclick4.mp3" preload="auto" style="display: none;"></audio>
+
+        <div style="display: flex; gap: 4px; justify-content: center; margin-top: 20px;">
+            <div id="ksrLed" style="width: 20px; height: 20px; background-color: #222; border-radius: 50%; box-shadow: 0 0 3px #000;"></div>
+            <span style="color: #0f0; font-family: monospace; font-size: 1.3em; padding-right: 8px;">KSR</span>
+        
+            <div id="asrLed" style="width: 20px; height: 20px; background-color: #222; border-radius: 50%; box-shadow: 0 0 3px #000;"></div>
+            <span style="color: #0f0; font-family: monospace; font-size: 1.3em; padding-right: 8px;">ASR</span>
+
+            <div id="llmLed" style="width: 20px; height: 20px; background-color: #222; border-radius: 50%; box-shadow: 0 0 3px #000;"></div>
+            <span style="color: #c78aff; font-family: monospace; font-size: 1.3em; padding-right: 8px;">LLM</span>
+
+            <div id="jamLed" style="width: 20px; height: 20px; background-color: #222; border-radius: 50%; box-shadow: 0 0 3px #000;"></div>
+            <span style="color: red; font-family: monospace; font-size: 1.3em; padding-right: 8px;">JAM</span>
+
+            <label style="color: #ccc; font-family: monospace; font-size: 1.3em;">
+                <input type="checkbox" id="bellToggle" checked>BELL
+            </label>
+        </div>
+
+        <div id="paperTapeOutput">
+            <div id="tapeContainer">
+                <img id="tapeImage" style="display: none;">
+            </div>
+        </div>
+
+        <script>
+
+            let isPoweredOn = false;
+
+            const startupSound = new Audio("tt-starting.mp3");
+            const loopSound = new Audio("tt-running.mp3");
+            const shutdownSound = new Audio("tt-stopping.mp3");
+            loopSound.loop = true;
+            const activeClickSounds = [];
+
+            const clickSound = new Audio("ttclick4.mp3");
+            clickSound.volume = 1.0;
+
+            function generatePaperTape() {
+                const inputText = document.getElementById("inputText").value;
+
+                const sendBtn = document.querySelector("button.send-button");
+                sendBtn.disabled = true;
+
+                // start blinking the LLM LED
+                document.getElementById("llmLed").classList.add("blink");
+
+                document.getElementById("ksrLed").style.backgroundColor = "#0f0";
+                setTimeout(() => {
+                    document.getElementById("ksrLed").style.backgroundColor = "#222";
+                }, 300);  // fades off after 300ms
+
+                if (!inputText) {
+                    alert("Please enter some text!");
+                    return;
+                }
+
+                const wordCount = inputText.trim().split(/\s+/).length;
+                if (wordCount > 16) {
+                    const jamLed = document.getElementById("jamLed");
+                    jamLed.classList.add("blink");
+
+                    alert("⛔ TAPE JAM! Too many words entered.\n\n(Please keep it to 16 or fewer for now.)");
+                    
+                    // Turn off LED after 2 seconds
+                    setTimeout(() => {
+                        jamLed.classList.remove("blink");
+                        jamLed.style.backgroundColor = "#222";
+                    }, 2000);
+                    sendBtn.disabled = false;  // Re-enable here!
+                    return;
+                }
+
+                const bellEnabled = document.getElementById("bellToggle").checked;
+
+                fetch('/generate_paper_tape', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: inputText, bell: bellEnabled })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Server error!");
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const imageUrl = URL.createObjectURL(blob);
+                    const tapeImage = document.getElementById("tapeImage");
+                    const tapeContainer = document.getElementById("tapeContainer");
+                    const sendBtn = document.querySelector("button.send-button");
+
+                    tapeImage.src = imageUrl;
+                    tapeImage.style.display = "block";
+
+                    // Reset scroll to start
+                    tapeContainer.scrollLeft = 0;
+
+                    // Retro chunk-scroll animation
+                    const scrollStep = 30; // pixels per "click" (like a punch unit)
+                    const scrollDelay = 100; // delay in ms per step
+
+                    const clickSound = document.getElementById("clickSound");
+
+                    document.getElementById("asrLed").classList.add("flicker");
+
+                    function chunkScroll(simulateSteps = 0) {
+                        const maxScroll = tapeContainer.scrollWidth - tapeContainer.clientWidth;
+
+                        // Stop blinking the LLM Led
+                        document.getElementById("llmLed").classList.remove("blink");
+
+                        if (simulateSteps > 0) {
+                            tapeContainer.scrollLeft += scrollStep;
+
+                            const clone = clickSound.cloneNode();
+                            clone.volume = 0.6;
+                            clone.play();
+                            activeClickSounds.push(clone);
+
+                            setTimeout(() => chunkScroll(simulateSteps - 1), scrollDelay);
+                        } else if (tapeContainer.scrollLeft < maxScroll) {
+                            tapeContainer.scrollLeft += scrollStep;
+
+                            if (tapeContainer.scrollLeft > maxScroll) {
+                                tapeContainer.scrollLeft = maxScroll;
+                            }
+
+                            const clone = clickSound.cloneNode();
+                            clone.volume = 0.8;
+                            clone.play();
+                            activeClickSounds.push(clone);
+
+                            setTimeout(() => chunkScroll(0), scrollDelay);
+                        } else {
+                            if (isPoweredOn && bellEnabled) {
+                                const bell = new Audio("ding.mp3");
+                                bell.play();
+                            }
+                            // Always clear the input when done
+                            document.getElementById("inputText").value = "";
+                            document.getElementById("asrLed").classList.remove("flicker");
+                            document.getElementById("asrLed").style.backgroundColor = "#222";
+                            sendBtn.disabled = false;
+
+                            // Make sure no more click sounds
+                            activeClickSounds.forEach(clone => {
+                                clone.pause();
+                                clone.currentTime = 0;
+                            });
+                            activeClickSounds.length = 0;
+
+                        }
+                    }
+
+                    // Give layout time to settle before starting animation
+                    const maxScroll = tapeContainer.scrollWidth - tapeContainer.clientWidth;
+                    const simulateSteps = maxScroll <= 0 ? 6 : 0;
+                    setTimeout(() => chunkScroll(simulateSteps), 500);
+
+                    // Safety timeout: force stop any clack sounds in case scroll logic fails
+                    setTimeout(() => {
+                        activeClickSounds.forEach(clone => {
+                            try {
+                                clone.pause();
+                                clone.currentTime = 0;
+                            } catch (e) {
+                                console.warn("Failed to stop a clone:", e);
+                            }
+                        });
+                        activeClickSounds.length = 0;
+                    }, 10000); // Adjust duration to fit worst-case scroll time
+
+                })
+                .catch(error => {
+                    console.error("❌ Paper tape generation failed:", error);
+                    alert("⛔ TAPE JAM! Error generating tape. Check console for details. We need a teletype repairman for this one.");
+                    
+                    const jamLed = document.getElementById("jamLed");
+                    jamLed.classList.add("blink");
+
+                    // Turn off LED after 2 seconds
+                    setTimeout(() => {
+                        jamLed.classList.remove("blink");
+                        jamLed.style.backgroundColor = "#222";
+                    }, 2000);
+                    sendBtn.disabled = false; // Re-enable if fetch fails
+                });
+            }
+
+            const inputField = document.getElementById("inputText");
+            const ksrLed = document.getElementById("ksrLed");
+
+            inputField.addEventListener("input", () => {
+                // Turn LED green briefly
+                ksrLed.style.backgroundColor = "#0f0";
+
+                // Reset LED after short time
+                clearTimeout(window.ksrLedTimer); // prevent overlapping timers
+                window.ksrLedTimer = setTimeout(() => {
+                    ksrLed.style.backgroundColor = "#222";
+                }, 100);  // short flash for each keystroke
+            });
+
+            document.getElementById("powerButton").addEventListener("click", () => {
+                isPoweredOn = !isPoweredOn;
+
+                const modelSelect = document.getElementById("modelSelect");
+                modelSelect.disabled = isPoweredOn;
+
+                const inputText = document.getElementById("inputText");
+                inputText.disabled = !isPoweredOn;
+                inputText.classList.toggle("power-on", isPoweredOn);
+
+                const powerBtn = document.getElementById("powerButton");
+
+                powerBtn.classList.toggle("depressed", isPoweredOn);
+                powerBtn.src = isPoweredOn ? "button-on.png" : "button-off.png";
+                powerBtn.classList.toggle("glow", isPoweredOn);
+
+                if (isPoweredOn) {
+
+                    startupSound.play();
+
+                    setTimeout(() => {
+                        const screen = document.getElementById("screen");
+                        screen.classList.add("shake");
+                        setTimeout(() => screen.classList.remove("shake"), 600);
+                    }, 650); // Delay the shake to sync with startup thump
+
+                    startupSound.onplay = () => {
+                        const overlapTime = startupSound.duration - 0.1;
+                        setTimeout(() => loopSound.play(), overlapTime * 1000);
+                    };
+
+                    document.getElementById("inputText").disabled = false;
+                    document.querySelector("button.send-button").disabled = false;
+                } else {
+                    startupSound.pause();
+                    startupSound.currentTime = 0;
+
+                    loopSound.pause();
+                    loopSound.currentTime = 0;
+
+                    // 💥 Screen shake after short delay
+                    setTimeout(() => {
+                        const screen = document.getElementById("screen");
+                        screen.classList.add("shake");
+                        setTimeout(() => screen.classList.remove("shake"), 600);
+                    }, 300); // Adjust timing to match tt-stopping.mp3
+
+                    shutdownSound.play();
+
+                    document.getElementById("inputText").disabled = true;
+                    document.querySelector("button.send-button").disabled = true;
+
+                    document.getElementById("asrLed").classList.remove("flicker");
+                    document.getElementById("ksrLed").style.backgroundColor = "#222";
+                    document.getElementById("jamLed").classList.remove("blink");
+                    document.getElementById("jamLed").style.backgroundColor = "#222";
+                }
+            });
+
+        </script>
+    </div>
+</body>
+</html>
