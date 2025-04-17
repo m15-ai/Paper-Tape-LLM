@@ -151,9 +151,9 @@
         <h1>
             <img id="logo" src="m15-4.png" alt="M15.ai Logo" style="height: 80px; cursor: pointer;">
         </h1>
-        <h2>Teletype Model 33 Paper Tape LLM</h2>
+        <h2>Teletype Paper Tape Chatbot</h2>
 
-        <h4><u>Instructions</u><br>Choose your LLM<br>Power on the machine<br>Type to the LLM<br>Power off to change models</h4>
+        <h4><u>Instructions</u><br>Choose your LLM<br>Power on the machine<br>Chat with the LLM<br>Power off to change models</h4>
 
         <div style="text-align: center; margin-top: 50px;">
             <label for="modelSelect" style="color: #0f0; font-family: monospace; font-size: 1.1em;">LLM Model:</label>
@@ -214,19 +214,27 @@
             const clickSound = new Audio("ttclick4.mp3");
             clickSound.volume = 1.0;
 
+            function stopClickSounds() {
+                activeClickSounds.forEach(clone => {
+                    try {
+                        clone.pause();
+                        clone.currentTime = 0;
+                    } catch (e) {}
+                });
+                activeClickSounds.length = 0;
+            }
+
             function generatePaperTape() {
                 const inputText = document.getElementById("inputText").value;
-
                 const sendBtn = document.querySelector("button.send-button");
                 sendBtn.disabled = true;
 
-                // start blinking the LLM LED
                 document.getElementById("llmLed").classList.add("blink");
 
                 document.getElementById("ksrLed").style.backgroundColor = "#0f0";
                 setTimeout(() => {
                     document.getElementById("ksrLed").style.backgroundColor = "#222";
-                }, 300);  // fades off after 300ms
+                }, 300);
 
                 if (!inputText) {
                     alert("Please enter some text!");
@@ -237,15 +245,12 @@
                 if (wordCount > 16) {
                     const jamLed = document.getElementById("jamLed");
                     jamLed.classList.add("blink");
-
                     alert("⛔ TAPE JAM! Too many words entered.\n\n(Please keep it to 16 or fewer for now.)");
-                    
-                    // Turn off LED after 2 seconds
                     setTimeout(() => {
                         jamLed.classList.remove("blink");
                         jamLed.style.backgroundColor = "#222";
                     }, 2000);
-                    sendBtn.disabled = false;  // Re-enable here!
+                    sendBtn.disabled = false;
                     return;
                 }
 
@@ -257,114 +262,73 @@
                     body: JSON.stringify({ text: inputText, bell: bellEnabled })
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Server error!");
-                    }
-                    return response.blob();
+                    if (!response.ok) throw new Error("Server error!");
+                    //const punchCount = parseInt(response.headers.get("X-Punch-Count")) || 12;
+
+                    let punchCount = parseInt(response.headers.get("X-Punch-Count")) || 12;
+                    punchCount = Math.max(0, punchCount - 40);  // fudge to ignore padding
+                    return response.blob().then(blob => ({ blob, punchCount }));
                 })
-                .then(blob => {
+                .then(({ blob, punchCount }) => {
                     const imageUrl = URL.createObjectURL(blob);
                     const tapeImage = document.getElementById("tapeImage");
                     const tapeContainer = document.getElementById("tapeContainer");
-                    const sendBtn = document.querySelector("button.send-button");
 
                     tapeImage.src = imageUrl;
                     tapeImage.style.display = "block";
-
-                    // Reset scroll to start
                     tapeContainer.scrollLeft = 0;
 
-                    // Retro chunk-scroll animation
-                    const scrollStep = 30; // pixels per "click" (like a punch unit)
-                    const scrollDelay = 100; // delay in ms per step
-
                     const clickSound = document.getElementById("clickSound");
-
                     document.getElementById("asrLed").classList.add("flicker");
 
-                    function chunkScroll(simulateSteps = 0) {
-                        const maxScroll = tapeContainer.scrollWidth - tapeContainer.clientWidth;
+                    const scrollStep = 18;
+                    const scrollDelay = 150;
 
-                        // Stop blinking the LLM Led
+                    function chunkScroll(remainingSteps) {
                         document.getElementById("llmLed").classList.remove("blink");
 
-                        if (simulateSteps > 0) {
+                        if (remainingSteps > 0) {
                             tapeContainer.scrollLeft += scrollStep;
 
                             const clone = clickSound.cloneNode();
-                            clone.volume = 0.6;
+                            clone.volume = 0.7;
                             clone.play();
                             activeClickSounds.push(clone);
 
-                            setTimeout(() => chunkScroll(simulateSteps - 1), scrollDelay);
-                        } else if (tapeContainer.scrollLeft < maxScroll) {
-                            tapeContainer.scrollLeft += scrollStep;
-
-                            if (tapeContainer.scrollLeft > maxScroll) {
-                                tapeContainer.scrollLeft = maxScroll;
-                            }
-
-                            const clone = clickSound.cloneNode();
-                            clone.volume = 0.8;
-                            clone.play();
-                            activeClickSounds.push(clone);
-
-                            setTimeout(() => chunkScroll(0), scrollDelay);
+                            setTimeout(() => chunkScroll(remainingSteps - 1), scrollDelay);
                         } else {
                             if (isPoweredOn && bellEnabled) {
                                 const bell = new Audio("ding.mp3");
                                 bell.play();
                             }
-                            // Always clear the input when done
                             document.getElementById("inputText").value = "";
                             document.getElementById("asrLed").classList.remove("flicker");
                             document.getElementById("asrLed").style.backgroundColor = "#222";
                             sendBtn.disabled = false;
-
-                            // Make sure no more click sounds
-                            activeClickSounds.forEach(clone => {
-                                clone.pause();
-                                clone.currentTime = 0;
-                            });
-                            activeClickSounds.length = 0;
-
+                            stopClickSounds(); // final safety cleanup
                         }
                     }
 
-                    // Give layout time to settle before starting animation
-                    const maxScroll = tapeContainer.scrollWidth - tapeContainer.clientWidth;
-                    const simulateSteps = maxScroll <= 0 ? 6 : 0;
-                    setTimeout(() => chunkScroll(simulateSteps), 500);
+                    setTimeout(() => chunkScroll(punchCount), 500);
 
-                    // Safety timeout: force stop any clack sounds in case scroll logic fails
-                    setTimeout(() => {
-                        activeClickSounds.forEach(clone => {
-                            try {
-                                clone.pause();
-                                clone.currentTime = 0;
-                            } catch (e) {
-                                console.warn("Failed to stop a clone:", e);
-                            }
-                        });
-                        activeClickSounds.length = 0;
-                    }, 10000); // Adjust duration to fit worst-case scroll time
-
+                    //setTimeout(() => {
+                    //    stopClickSounds(); // failsafe
+                    //}, punchCount * scrollDelay + 1000);
                 })
                 .catch(error => {
                     console.error("❌ Paper tape generation failed:", error);
                     alert("⛔ TAPE JAM! Error generating tape. Check console for details. We need a teletype repairman for this one.");
-                    
+
                     const jamLed = document.getElementById("jamLed");
                     jamLed.classList.add("blink");
-
-                    // Turn off LED after 2 seconds
                     setTimeout(() => {
                         jamLed.classList.remove("blink");
                         jamLed.style.backgroundColor = "#222";
                     }, 2000);
-                    sendBtn.disabled = false; // Re-enable if fetch fails
+                    sendBtn.disabled = false;
                 });
             }
+
 
             const inputField = document.getElementById("inputText");
             const ksrLed = document.getElementById("ksrLed");
@@ -372,6 +336,10 @@
             inputField.addEventListener("input", () => {
                 // Turn LED green briefly
                 ksrLed.style.backgroundColor = "#0f0";
+
+                if (isPoweredOn) {
+                    stopClickSounds(); // 🔇 Stop clacking if user takes over
+                }
 
                 // Reset LED after short time
                 clearTimeout(window.ksrLedTimer); // prevent overlapping timers
@@ -382,6 +350,9 @@
 
             document.getElementById("powerButton").addEventListener("click", () => {
                 isPoweredOn = !isPoweredOn;
+
+                // Machine is being turned OFF
+                stopClickSounds(); // 🔇 Kill clicks if still playing
 
                 const modelSelect = document.getElementById("modelSelect");
                 modelSelect.disabled = isPoweredOn;

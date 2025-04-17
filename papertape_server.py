@@ -147,7 +147,8 @@ def generate_paper_tape(text, bell_enabled=False):
     plt.savefig(img_io, format='png', bbox_inches='tight', dpi=150, facecolor='#0f0f0f', transparent=False)
     img_io.seek(0)
     plt.close(fig)
-    return img_io
+
+    return img_io, len(ascii_punch_codes)
 
 @app.route('/generate_paper_tape', methods=['POST'])
 def generate_tape():
@@ -182,8 +183,11 @@ def generate_tape():
     completion = response.json().get("response", "").strip()
 
     # Generate tape image from LLM response
-    img_io = generate_paper_tape(completion, bell_enabled)
-    return send_file(img_io, mimetype='image/png')
+    img_io, punch_count = generate_paper_tape(completion, bell_enabled)
+
+    response = send_file(img_io, mimetype='image/png')
+    response.headers['X-Punch-Count'] = str(punch_count)
+    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
