@@ -176,14 +176,14 @@ def generate_tape():
 
 ## Inspiration
 
-The computer my dad built and the original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's where it all started for me:
+The original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's where it all started for me:
 
-<img src="./Docs/inspiration.png" alt="inspiration" style="zoom:50%;" />
+<img src="./Docs/MITS-boot-loader.png" alt="inspiration" style="zoom:50%;" />
 
 ## Notes
 
 - Tested on desktop and mobile
-- Models run offline — no external API calls
+- Could not have been possible without Grok3 Studio
 
 ## License
 
