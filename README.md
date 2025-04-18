@@ -67,8 +67,8 @@ ollama pull granite3-moe:1b
 Make sure the Ollama daemon is running in the background. Use `Ollama list` to confirm your models are available:
 
 ```
-[ec2-user@ip-xxx html]$ ollama serve
-[ec2-user@ip-xxx html]$ ollama list
+$ ollama serve
+$ ollama list
 NAME                   ID              SIZE      MODIFIED     
 granite3-moe:1b        d84e1e38ee39    821 MB    25 hours ago    
 tinydolphin:latest     0f9dd11f824c    636 MB    25 hours ago    
@@ -105,14 +105,13 @@ sudo fc-cache -fv
 Place the `papertape_server.py` file in a non-public directory:
 
 ```
-[ec2-user@ip-xxx ~]$ pwd
+$ pwd
 /home/ec2-user
-[ec2-user@ip-xxx ~]$ ls -lsart
+$ ls -lsart
 total 18
  0 drwxr-xr-x. 3 ec2-user ec2-user    75 Apr 16 20:43 .ollama
  8 -rw-rw-r--. 1 ec2-user ec2-user  7461 Apr 17 17:44 papertape_server.py
  4 -rw-r--r--. 1 ec2-user ec2-user  2305 Apr 17 20:33 server.log
-[ec2-user@ip-172-31-56-10 ~]$ 
 ```
 
 Run the server so it will persist:
@@ -128,9 +127,9 @@ This will expose the `/generate_paper_tape` endpoint.
 Place the `papertape.html` file, the `*.mp3` sound files, and the `*.png` images into a public directory:
 
 ```
-[ec2-user@ip-xxx html]$ pwd
+$ pwd
 /var/www/html
-[ec2-user@ip-xxx html]$ ls -lsart
+$ ls -lsart
 total 63
   0 drwxr-xr-x. 4 root     root         33 Dec 16 23:12 ..
   4 -rw-rw-r--. 1 ec2-user ec2-user    743 Apr 13 20:37 send_48dp_green.png
@@ -158,8 +157,8 @@ This file contains the fully retro-styled frontend interface:
 - **LLM Selector**: A dropdown menu lets users select which local Ollama model to use. Locked while power is on.
 - **LED Panel**: Simulated KSR, ASR, LLM, and JAM status lights that activate based on interaction state.
 - **BELL Toggle**: Checkbox enabling the inclusion of ASCII `BEL` (U+0007) in the final tape and triggering a physical bell sound (`ding.mp3`).
-- **Paper Tape Scroll**: Receives a PNG tape image from the server and scrolls it across the screen in "chunky" increments, synchronized with retro click sounds (`ttclick4.mp3`).
-- **Audio Feedback**: Three hum sounds (`tt-starting.mp3`, `tt-running.mp3`, `tt-stopping.mp3`) create a realistic audio profile for machine state.
+- **Paper Tape Scroll**: Receives a ASCII-accurate PNG tape image from the server and scrolls it across the screen in "chunky" increments, synchronized with retro click sounds (`ttclick4.mp3`).
+- **Audio Feedback**: Three hum sounds (`tt-starting.mp3`, `tt-running.mp3`, `tt-stopping.mp3`) create a realistic audio profile for machine state. The classic teletype bell "ding" can be added at the end of each line.   
 - **Tape JAM Handling**: Detects long input or LLM output, shows a JAM LED, and aborts the scroll sequence.
 
 #### Python Backend Overview (`papertape_server.py`)
@@ -200,7 +199,7 @@ def generate_tape():
 
 ## Inspiration
 
-Dad's original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's where it all started for me:
+Dad's original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape and BASIC manual. That's where it all started for me:
 
 <img src="./Docs/MITS-boot-loader.png" alt="inspiration" width="1000" />
 

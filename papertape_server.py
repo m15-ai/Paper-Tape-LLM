@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import io
 import requests
 import matplotlib.font_manager as fm
+import datetime
 
 app = Flask(__name__)
 
@@ -177,16 +178,40 @@ def generate_tape():
         "stream": False
     })
 
+
     if not response.ok:
         return f"Ollama error: {response.text}", 500
     
     completion = response.json().get("response", "").strip()
 
+    # Only allow 500 chars in the completion, if more, trigger a "JAM" and truncate
+    max_chars = 500
+    if len(completion) > max_chars:
+        completion = completion[:max_chars]
+        jam_detected = True
+    else:
+        jam_detected = False
+
     # Generate tape image from LLM response
     img_io, punch_count = generate_paper_tape(completion, bell_enabled)
 
+
+    # This log code is not included in the Github release
+    ip_addr = request.remote_addr
+    truncated_completion = completion.strip().replace("\n", " ")[:500]
+    model_used = selected_model  # pulled from the JSON earlier
+    log_line = (
+        f"[{datetime.datetime.now()}] "
+        f"IP: {ip_addr} | MODEL: {model_used} | "
+        f"PROMPT: {user_prompt.strip()} || COMPLETION: {truncated_completion}\n"
+    )
+    with open("usage.log", "a") as log_file:
+        log_file.write(log_line)
+
+
     response = send_file(img_io, mimetype='image/png')
     response.headers['X-Punch-Count'] = str(punch_count)
+    response.headers["X-Jam"] = "1" if jam_detected else "0"
     return response
 
 if __name__ == '__main__':
