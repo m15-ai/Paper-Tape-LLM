@@ -75,10 +75,34 @@ tinydolphin:latest     0f9dd11f824c    636 MB    25 hours ago
 qwen2.5:0.5b           a8b0c5157701    397 MB    25 hours ago
 ```
 
+#### Required Font: FreeMono
+
+To render the paper tape images with proper spacing and visible control character glyphs (like `NUL`, `BEL`, etc.), this project uses the **FreeMono** font from GNU FreeFont.
+
+This font must be installed on your system for the tape images to render correctly.
+
+You can download it directly from the GNU project:
+
+https://ftp.gnu.org/gnu/freefont/
+
+Look for the file:
+
+```
+FreeMono.ttf
+```
+
+Install it system-wide, or copy it into a known font path (e.g., `/usr/share/fonts`), then refresh the font cache:
+
+```
+sudo fc-cache -fv
+```
+
+- This font supports printable glyphs for ASCII control characters, which are rendered directly on the tape.
+- If the font is missing, you may get blank or misaligned output.
 
 #### Start the Flask server
 
-Place the server in a non-public directory:
+Place the `papertape_server.py` file in a non-public directory:
 
 ```
 [ec2-user@ip-xxx ~]$ pwd
@@ -158,31 +182,6 @@ This Flask server powers the paper tape simulation and LLM interaction:
   - The PNG image via `send_file()`
   - A custom HTTP header (`X-Punch-Count`) with the total character count for frontend animation sync
 
-#### Required Font: FreeMono
-
-To render the paper tape images with proper spacing and visible control character glyphs (like `NUL`, `BEL`, etc.), this project uses the **FreeMono** font from GNU FreeFont.
-
-This font must be installed on your system for the tape images to render correctly.
-
-You can download it directly from the GNU project:
-
-https://ftp.gnu.org/gnu/freefont/
-
-Look for the file:
-
-```
-FreeMono.ttf
-```
-
-Install it system-wide, or copy it into a known font path (e.g., `/usr/share/fonts`), then refresh the font cache:
-
-```
-sudo fc-cache -fv
-```
-
-- This font supports printable glyphs for ASCII control characters, which are rendered directly on the tape.
-- If the font is missing, you may get blank or misaligned output.
-
 #### Customizing the System Prompt
 
 The system message sent to each model tells it to behave like a 1979 Teletype terminal. You can modify this string in `papertape_server.py` to adjust tone, length, or formatting of LLM responses.
@@ -201,14 +200,14 @@ def generate_tape():
 
 ## Inspiration
 
-The original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's where it all started for me:
+Dad's original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's where it all started for me:
 
 <img src="./Docs/MITS-boot-loader.png" alt="inspiration" style="zoom:50%;" />
 
 ## Notes
 
 - Tested on desktop and mobile
-- Could not have been possible without Grok Studio
+- This project was made possible with the help of Grok Studio, so we needed those 50 years to get here.
 
 ## License
 
