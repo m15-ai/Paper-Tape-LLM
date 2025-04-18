@@ -2,15 +2,11 @@
 
 Inspired by the 50th anniversary of Microsoft, I vibe coded a working teletype paper tape chatbot.  
 
-First, the computer my dad built and the original Micro-soft MITS bootstrap loader paper tape for Altair 4k BASIC:
-
-[insert pic]
-
 Introducing a retro-futuristic terminal interface that simulates a 1979 Teletype Model 33 ASR — powered by modern LLMs via Ollama. Generates animated, audio-punched paper tape output for your prompts. Powered on/off with sound effects and glowing LEDs.
 
 ## Screenshot
 
-<img src="./Screenshot-pt.png" style="zoom:50%;" />
+<img src="./Docs/screenshot-pt.png" alt="screenshot-pt" style="zoom:66%;" />
 
 ## Features
 
@@ -177,6 +173,12 @@ def generate_tape():
         "Avoid punctuation unless absolutely necessary. Never apologize or explain. "
     )
 ```
+
+## Inspiration
+
+The computer my dad built and the original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's where it all started for me:
+
+<img src="./Docs/inspiration.png" alt="inspiration" style="zoom:50%;" />
 
 ## Notes
 
