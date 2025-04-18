@@ -6,7 +6,7 @@ Introducing a retro-futuristic terminal interface that simulates a 1979 Teletype
 
 ## Screenshot
 
-<img src="./Docs/screenshot-pt.png" alt="screenshot-pt" style="zoom:66%;" />
+<img src="./Docs/screenshot-pt.png" alt="screenshot-pt" width="600" />
 
 ## Features
 
@@ -37,7 +37,7 @@ Introducing a retro-futuristic terminal interface that simulates a 1979 Teletype
 
 ## Setup
 
-I setup my server on Amazon AWS Linux. Adjust accordingly for your environment.
+I set up my server on Amazon AWS Linux. Adjust accordingly for your environment.
 
 #### Clone the repo
 
@@ -147,7 +147,7 @@ total 63
 
 #### Serve the HTML page
 
-After launching the Flask backend, open `papertape.html` directly in your browser (e.g., from your `/var/www/html` or localhost folder). The HTML will communicate with the backend to generate paper tape completions.
+After launching the Flask backend, open `papertape.html` directly in your browser (e.g., from your `/var/www/html` or localhost folder). The HTML file sends prompts to the Flask backend, which responds with a PNG image of the paper tape.
 
 #### HTML Overview (`papertape.html`)
 
@@ -202,7 +202,7 @@ def generate_tape():
 
 Dad's original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's where it all started for me:
 
-<img src="./Docs/MITS-boot-loader.png" alt="inspiration" style="zoom:50%;" />
+<img src="./Docs/MITS-boot-loader.png" alt="inspiration" width="1000" />
 
 ## Notes
 
