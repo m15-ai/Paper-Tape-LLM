@@ -153,10 +153,35 @@ This Flask server powers the paper tape simulation and LLM interaction:
   - Converts the LLM completion string to 8-bit ASCII punch codes
   - Adds leader (`0xFF`) and trailer (`0x00`) bytes
   - Optionally appends `BEL` as a visible glyph
-  - Uses `matplotlib` to render a PNG of the full tape
+  - Uses `matplotlib` with the `FreeMono` font to render a PNG of the full tape, including glyphs for control characters
 - **Returns**:
   - The PNG image via `send_file()`
   - A custom HTTP header (`X-Punch-Count`) with the total character count for frontend animation sync
+
+#### Required Font: FreeMono
+
+To render the paper tape images with proper spacing and visible control character glyphs (like `NUL`, `BEL`, etc.), this project uses the **FreeMono** font from GNU FreeFont.
+
+This font must be installed on your system for the tape images to render correctly.
+
+You can download it directly from the GNU project:
+
+https://ftp.gnu.org/gnu/freefont/
+
+Look for the file:
+
+```
+FreeMono.ttf
+```
+
+Install it system-wide, or copy it into a known font path (e.g., `/usr/share/fonts`), then refresh the font cache:
+
+```
+sudo fc-cache -fv
+```
+
+- This font supports printable glyphs for ASCII control characters, which are rendered directly on the tape.
+- If the font is missing, you may get blank or misaligned output.
 
 #### Customizing the System Prompt
 
@@ -183,7 +208,7 @@ The original Micro-soft MITS Altair 4k BASIC bootstrap loader paper tape. That's
 ## Notes
 
 - Tested on desktop and mobile
-- Could not have been possible without Grok3 Studio
+- Could not have been possible without Grok Studio
 
 ## License
 
