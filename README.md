@@ -1,10 +1,8 @@
 # Teletype Paper Tape Chatbot
 
-Inspired by the 50th anniversary of Microsoft, I vibe coded a working teletype paper tape chatbot.  
+Inspired by the 50th anniversary of Microsoft, and the original Altair 4k BASIC, I vibe coded a working teletype paper tape chatbot.  
 
 Introducing a retro-futuristic terminal interface that simulates a 1979 Teletype Model 33 ASR — powered by modern LLMs via Ollama. Generates animated, audio-punched paper tape output for your prompts. Powered on/off with sound effects and glowing LEDs.
-
-## Screenshot
 
 <img src="./Docs/screenshot-pt.png" alt="screenshot-pt" width="600" />
 
